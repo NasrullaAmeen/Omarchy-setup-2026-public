@@ -28,6 +28,7 @@
 | ------ | --- | ------- | ------ | ------- |
 | Keystroke | `evindor.keystroke` | Raycast-style command palette that **replaces the Omarchy menu** (`omarchy.clonedFrom: "omarchy.menu"`): type or speak apps, any Omarchy menu command, hotkeys, math, conversions, emoji, clipboard history, files, Codex hand-off; local smart-match embedding model. `Super+Space`, every `omarchy-menu` binding, `omarchy menu …` and the menu pickers all route to it. Menu + bar-widget kinds; its bar button replaces the stock menu button (first on the left). Disabling/removing (`omarchy plugin disable/remove evindor.keystroke`) restores the stock menu. | [evindor/keystroke](https://github.com/evindor/keystroke) | `omarchy plugin add https://github.com/evindor/keystroke.git --enable --yes` |
 | Onote | `io.github.lolu13.onote` | Sticky notes as ordinary tiled Hyprland windows, drawn by `omarchy-shell` itself (no browser engine/separate app): SQLite store owned by a small local Rust helper (`~/.local/bin/onote-helper`, built from source), notes tile/float/resize like normal windows, closing puts a note in the stack (nothing deleted), tabs, pinned notes, full-text search, optional one-way Markdown mirror (Obsidian). Service + overlay + bar-widget kinds; bar button in the right section. Adds five `Super` bindings (see the Onote section) via `~/.config/hypr/onote.lua` + one `dofile` in `bindings.lua`. | [lolu13/onote](https://github.com/lolu13/onote) | `omarchy plugin add https://github.com/lolu13/onote.git --enable --yes` then `cargo build --release --manifest-path helper/Cargo.toml` and `python3 scripts/install.py` (needs a Rust toolchain; see the Onote section) |
+| Mouseless | `wkuehler.mouseless` | Keyboard-driven pointer (warpd-style): press a modifier, the screen fills with a lettered hint grid, type three letters to warp the pointer and click; supports right/middle/double click, move-only, and scroll mode. Overlay kind (no bar widget — summoned by a keybind). Added `SUPER+ALT+M` binding (SUPER+M is taken by Days). | [wkuehler/mouseless](https://github.com/wkuehler/mouseless) | `omarchy plugin add https://github.com/wkuehler/mouseless.git --enable --yes` then add the trigger binding (see the Mouseless section) |
 
 | Plugins | ID | Purpose | Source | Install |
 | ------ | --- | ------- | ------ | ------- |
@@ -426,6 +427,29 @@ Verified live: helper built and running (child of the shell); bar widget on the
 bar's right section; `hyprctl configerrors` clean; install backups in
 `~/.local/state/onote/install-backups/`.
 
+## Mouseless (keyboard-driven pointer)
+
+[Mouseless](https://github.com/wkuehler/mouseless) (`wkuehler.mouseless`) is a
+warpd-style pointer that never needs the mouse: press the trigger, the screen
+fills with a lettered hint grid, and three keystrokes put the pointer on a
+15×14 px target and click. Two letters pick a cell from a 26×26 grid, the
+third picks an exact spot from a keyboard-shaped block. Arrow keys
+move a highlight; action keys: `↵`/final letter = click, `Space` = move only,
+`Tab` = move + scroll mode, `Shift` = double click, `Ctrl` = right click,
+`Alt` = middle click. Overlay kind — no bar widget, summoned by keybind.
+
+**Trigger on this machine:** `SUPER+M` is taken by Days (Daily tasks), so the
+plugin's suggested default is not used. Added to `~/.config/hypr/bindings.lua`
+(following the README's exact command):
+
+```lua
+o.bind("SUPER + ALT + M", "Mouse: hint grid", "omarchy-shell shell toggle wkuehler.mouseless")
+```
+
+`hyprctl reload` + `hyprctl configerrors` are clean. It can also be reached any
+time through the Keystroke palette (type "mouse"). Counted with the OmiHaze
+style: it replaces reaching for the mouse entirely.
+
 ## Days + local calendar (Caldir)
 
 Days shows the day's calendar events above the task list **only** if the
@@ -637,6 +661,10 @@ git -C ~/.config/omarchy/plugins/omarchy-google-calendar-clock diff HEAD~1 HEAD 
   `scripts/install.py`
 - `~/.local/share/com.desknotes.omarchy/desknotes.db` — notes SQLite store
   (owned by `onote-helper`; shared with earlier DeskNotes installs if any)
+- `~/.config/hypr/bindings.lua` — Mouseless trigger
+  `o.bind("SUPER + ALT + M", "Mouse: hint grid", "omarchy-shell shell toggle
+  wkuehler.mouseless")` (added above the Onote `dofile` line; SUPER+M stayed
+  with Days)
 
 ## Caveats
 
