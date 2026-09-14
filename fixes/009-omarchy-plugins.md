@@ -232,15 +232,60 @@ printf 'color = "#7aa2f7"\nread_only = false\n' > ~/Calendar/personal/.caldir/co
   points `calendar_dir` at it and sets `default_calendar`. `color` is
   `#RRGGBB` (shown in Days), `read_only` allows local edits.
 - Events are plain iCalendar; files created by `caldir new` are named
-  `YYYY-MM-DDTHHMM__<slug>.ics`.
+  `YYYY-MM-DDTHHMM__<slug>.ics`:
+  - **All-day notes** (no time) use `DTSTART;VALUE=DATE` and are named
+    `YYYY-MM-DD__<slug>.ics`.
+  - **Notes with a time** use `DTSTART;TZID=<zone>` (here
+    `Indian/Maldives`) — e.g. today's `2026-09-14__test` → `test` at
+    11:00–12:00 (`all_day:false` in the bridge).
+  - **Recurring** via `RRULE:FREQ=YEARLY` (my birthday Aug 31, anniversary
+    May 28) — the bridge resolves each occurrence to the right day
+    (`recurring:true`, `recurrence_id` set) so Days shows them on the right
+    dates.
 - Bridge check:
   `~/.config/omarchy/plugins/omarchy-google-calendar-clock/scripts/calendar-events 2026-09-14 2026-09-20`
   prints `{"ok":true,"events":[...]}`.
 - Days caches one file per day in `~/.local/share/leonrlr4.days/events/YYYY-MM-DD.json`
   and refetches a couple of seconds after an overlay opens, so a new `.ics` may
   take a moment to appear.
-- Google sync is intentionally off (`setup --binaries-only`), so the clock
+- **Google sync is intentionally off** (`setup --binaries-only`), so the clock
   widget stays a plain clock — fine, Days is the only consumer.
+- **Calendar auto-reminders:** reminders are scheduled at note-add time by the
+  path watcher (and re-checked by the 5-min timer). A reminder set for a note
+  that's then deleted keeps firing — cancel it with `omarchy-reminder clear`.
+  Editing a note reschedules cleanly (the stale systemd timer is stopped).
+
+### Auto-reminders for timed notes
+
+A timed note (an event **with a time**, e.g. `calendar-caldir new "Standup" -s
+"11:40" -d 30m`) now **automatically becomes an Omarchy reminder** that fires
+at the event's start — adding a timed note is enough, no separate reminder
+needed. All-day notes (no time) are skipped.
+
+- **Trigger:** `omarchy-calendar-remind.path` (systemd user unit) watches
+  `~/Calendar` and each calendar subfolder, so creating a timed `.ics` runs
+  `omarchy-calendar-remind.service` instantly. `omarchy-calendar-remind.timer`
+  re-scans every 5 min (and right after boot) as a safety net for edits,
+  events added while the machine was off, or brand-new subfolders.
+- **Script:** `~/.local/bin/omarchy-calendar-remind` (mirrored at
+  `config/omarchy/omarchy-calendar-remind`). It parses each `.ics`, computes
+  minutes until `DTSTART` (honoring `TZID`), and schedules the reminder.
+- **Same mechanism as `omarchy-reminder`:** a `systemd-run --user` transient
+  timer `omarchy-reminder-<N>m-<epoch>` with the messages in
+  `${XDG_RUNTIME_DIR}/omarchy-reminders/`, so these reminders appear in
+  `omarchy-reminder show` and are cleared by `omarchy-reminder clear`. The
+  unit name is derived deterministically from the event's start time.
+- **Idempotent:** each event is fingerprinted by its `UID` in
+  `~/.local/state/omarchy-calendar-remind/` — re-runs and the 5-min timer are
+  no-ops. Editing a note's time/title cancels the stale reminder and schedules
+  the new one; deleting the note leaves any already-set reminder intact.
+- **Env overrides:** `OMARCHY_CAL_REMIND_HORIZON` caps how many minutes ahead
+  to schedule (default `0` = any future event), `CALENDAR_DIR`, `STATE_DIR`.
+- **Restore on a fresh install:** `config/restore.sh` **step 8** re-creates
+  the script + units (regenerating a `PathChanged=` line per calendar
+  subfolder, since `PathChanged=` does **not** support globs) and enables
+  both units. If you later add a new calendar folder, re-run restore.sh (or
+  add one `PathChanged=` line) to watch it.
 
 ## Files touched
 
@@ -273,6 +318,15 @@ printf 'color = "#7aa2f7"\nread_only = false\n' > ~/Calendar/personal/.caldir/co
   `style.wallpaper-span` (mirrored in
   `config/omarchy/extensions/omarchy-menu.jsonc`) — restoring these three is
   `config/restore.sh` step 7
+- `~/.local/bin/omarchy-calendar-remind` — timed-note → reminder watcher
+  (mirrored in `config/omarchy/omarchy-calendar-remind`) — installed by
+  `config/restore.sh` step 8
+- `~/.config/systemd/user/omarchy-calendar-remind.{path,service,timer}` —
+  systemd user units: `.path` watches `~/Calendar` + subfolders for instant
+  trigger, `.timer` re-scans every 5 min and on boot (mirrored in
+  `config/systemd/user/`)
+- `~/.local/state/omarchy-calendar-remind/` — per-UID fingerprint markers
+  (dedupe) plus the `flock` lock
 
 ## Caveats
 

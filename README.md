@@ -27,7 +27,9 @@ Installed third-party plugins (from the
 - Omarchy Google Calendar and Clock (local calendar via Caldir; bridge for Days)
 - OmiHaze (dims inactive windows)
 
-Details, install commands, and management: [`fixes/009-omarchy-plugins.md`](fixes/009-omarchy-plugins.md).
+Details, install commands, and management — including **auto-reminders for
+timed calendar notes** (a note with a time triggers an Omarchy reminder at its
+start): [`fixes/009-omarchy-plugins.md`](fixes/009-omarchy-plugins.md).
 
 The wallpaper-span add-on is fully restorable: the plugin patch lives in
 [`config/patches/wallpaper-align.span.patch`](config/patches/wallpaper-align.span.patch)
