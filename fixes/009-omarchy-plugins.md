@@ -29,6 +29,7 @@
 | Keystroke | `evindor.keystroke` | Raycast-style command palette that **replaces the Omarchy menu** (`omarchy.clonedFrom: "omarchy.menu"`): type or speak apps, any Omarchy menu command, hotkeys, math, conversions, emoji, clipboard history, files, Codex hand-off; local smart-match embedding model. `Super+Space`, every `omarchy-menu` binding, `omarchy menu …` and the menu pickers all route to it. Menu + bar-widget kinds; its bar button replaces the stock menu button (first on the left). Disabling/removing (`omarchy plugin disable/remove evindor.keystroke`) restores the stock menu. | [evindor/keystroke](https://github.com/evindor/keystroke) | `omarchy plugin add https://github.com/evindor/keystroke.git --enable --yes` |
 | Onote | `io.github.lolu13.onote` | Sticky notes as ordinary tiled Hyprland windows, drawn by `omarchy-shell` itself (no browser engine/separate app): SQLite store owned by a small local Rust helper (`~/.local/bin/onote-helper`, built from source), notes tile/float/resize like normal windows, closing puts a note in the stack (nothing deleted), tabs, pinned notes, full-text search, optional one-way Markdown mirror (Obsidian). Service + overlay + bar-widget kinds; bar button in the right section. Adds five `Super` bindings (see the Onote section) via `~/.config/hypr/onote.lua` + one `dofile` in `bindings.lua`. | [lolu13/onote](https://github.com/lolu13/onote) | `omarchy plugin add https://github.com/lolu13/onote.git --enable --yes` then `cargo build --release --manifest-path helper/Cargo.toml` and `python3 scripts/install.py` (needs a Rust toolchain; see the Onote section) |
 | Mouseless | `wkuehler.mouseless` | Keyboard-driven pointer (warpd-style): press a modifier, the screen fills with a lettered hint grid, type three letters to warp the pointer and click; supports right/middle/double click, move-only, and scroll mode. Overlay kind (no bar widget — summoned by a keybind). Added `SUPER+ALT+M` binding (SUPER+M is taken by Days). | [wkuehler/mouseless](https://github.com/wkuehler/mouseless) | `omarchy plugin add https://github.com/wkuehler/mouseless.git --enable --yes` then add the trigger binding (see the Mouseless section) |
+| YouTube Float | `io.github.jcputney.media-float-youtube` | Pick up where you left off on YouTube: Watch Later, history, subscriptions, playlists, channels, and search — then play the result in a small **floating, pinned mpv window** that follows you across workspaces. Overlay kind (no bar widget); `youtube-float` CLI + a launcher entry ("YouTube Float"); optional cookies via `youtube-float auth` for subscriptions/history (search works signed out). Requires mpv + yt-dlp (already present). Added four `SUPER+ALT` bindings (see the YouTube Float section); floats/window rules in `~/.config/hypr/media-float.lua`. | [jcputney/omarchy-media-float-youtube](https://github.com/jcputney/omarchy-media-float-youtube) | `omarchy plugin add https://github.com/jcputney/omarchy-media-float-youtube.git --enable --yes` then `<plugin-dir>/setup` and `omarchy restart shell` |
 
 | Plugins | ID | Purpose | Source | Install |
 | ------ | --- | ------- | ------ | ------- |
@@ -450,6 +451,48 @@ o.bind("SUPER + ALT + M", "Mouse: hint grid", "omarchy-shell shell toggle wkuehl
 time through the Keystroke palette (type "mouse"). Counted with the OmiHaze
 style: it replaces reaching for the mouse entirely.
 
+## YouTube Float (floating mpv player)
+
+[YouTube Float](https://github.com/jcputney/omarchy-media-float-youtube)
+(`io.github.jcputney.media-float-youtube`) picks up where you left off on
+YouTube: Watch Later and in-progress videos first, then subscriptions,
+playlists, channels, and search. Choosing a result plays it in a small
+**floating, pinned mpv window** (≈ quarter-monitor, keeps the video's real
+aspect ratio) that follows you across workspaces and dims nothing. Overlay
+kind (`Picker.qml`), no bar widget.
+
+**Two half installers** (this machine, both done):
+1. `omarchy plugin add https://github.com/jcputney/omarchy-media-float-youtube.git --enable --yes`
+   — hands the shell the picker overlay (registers in `shell.json`).
+2. `<plugin-dir>/setup` — installs the `youtube-float` CLI to
+   `~/.local/bin/`, the launcher entry ("YouTube Float"), and the shared
+   floating window rules in `~/.config/hypr/media-float.lua`
+   (`require("hypr.media-float")` from `hyprland.lua`); verifies `mpv` and
+   `yt-dlp` (both were already installed).
+3. `omarchy restart shell` — the shell caches plugin QML once loaded; the
+   restart is what makes a freshly installed picker appear.
+
+`setup --check` reports what's installed; `setup --uninstall` removes
+everything it wrote.
+
+**Signed out vs signed in:** search and channel browsing work signed out;
+subscriptions, Watch Later, history, and playlists need cookies — run
+`youtube-float auth` once (opens a tool-only browser profile; closing the
+window exports the cookies itself — no extension, no file to place).
+
+**Keybindings added** (all free on this machine; setup leaves them to you):
+
+| Keys | Action |
+| --- | --- |
+| `SUPER+ALT+Y` | YouTube: browse and play (`youtube-float browse`) |
+| `SUPER+ALT+SHIFT+P` | Overlay: hide/show (`float-overlay toggle`) |
+| `SUPER+ALT+CTRL+P` | Overlay: close (`float-overlay quit`) |
+| `SUPER+ALT+O` | Overlay: cycle size (`float-overlay size cycle`) |
+
+Verified live: picker registered, `youtube-float` on PATH, launcher entry
+present, window rule loaded via `hyprland.lua`, `hyprctl reload` +
+`configerrors` clean, shell restarted with zero QML errors.
+
 ## Days + local calendar (Caldir)
 
 Days shows the day's calendar events above the task list **only** if the
@@ -665,6 +708,18 @@ git -C ~/.config/omarchy/plugins/omarchy-google-calendar-clock diff HEAD~1 HEAD 
   `o.bind("SUPER + ALT + M", "Mouse: hint grid", "omarchy-shell shell toggle
   wkuehler.mouseless")` (added above the Onote `dofile` line; SUPER+M stayed
   with Days)
+- `~/.local/bin/youtube-float` — YouTube Float CLI (browse/play/quality/resume/
+  auth/toggle/quit/size); installed by the plugin's `setup`
+- `~/.config/hypr/media-float.lua` — shared floating-overlay window rules for
+  the media-float family (plex/twitch/youtube), `require`d from
+  `~/.config/hypr/hyprland.lua`
+- `~/.config/hypr/bindings.lua` — YouTube Float keys: `SUPER+ALT+Y` (browse/
+  play), `SUPER+ALT+SHIFT+P` (hide/show), `SUPER+ALT+CTRL+P` (close),
+  `SUPER+ALT+O` (cycle size) — see the YouTube Float section
+- `~/.local/share/applications/io.github.jcputney.media-float-youtube.desktop`
+  — "YouTube Float" launcher entry
+- `~/.cache/youtube-float/` — cookies and watch-history cache (created by
+  `youtube-float auth`/usage)
 
 ## Caveats
 

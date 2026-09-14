@@ -34,6 +34,9 @@ Installed third-party plugins (from the
   notes & stack, `Super+Alt+N` new note, `Super+Alt+H` stack all)
 - Mouseless (keyboard-driven pointer — `Super+Alt+M` opens a lettered hint
   grid to warp and click without the mouse)
+- YouTube Float (browse YouTube Watch Later/subscriptions/search from a
+  picker and play in a floating pinned mpv window; `Super+Alt+Y` and overlay
+  keys)
 - OmaSpotify (full Spotify client in Quickshell; under Bar Screens its bar
    widget is an icon that opens the full player; local playback needs a
    Spotify Premium account)
