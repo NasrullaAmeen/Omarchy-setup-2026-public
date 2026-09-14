@@ -26,17 +26,22 @@ Installed third-party plugins (from the
 - Days
 - Omarchy Google Calendar and Clock (local calendar via Caldir; bridge for Days)
 - OmiHaze (dims inactive windows)
+- Paper Mode (paper/e-ink screen shaders from the bar; patched so its widget
+  reaches its service over IPC under the Bar Screens replacement bar)
 
 Details, install commands, and management — including **auto-reminders for
 timed calendar notes** (a note with a time triggers an Omarchy reminder at its
-start): [`fixes/009-omarchy-plugins.md`](fixes/009-omarchy-plugins.md).
+start, with a notification sound) and the **Paper Mode host-IPC patch**:
+[`fixes/009-omarchy-plugins.md`](fixes/009-omarchy-plugins.md).
 
-The wallpaper-span add-on is fully restorable: the plugin patch lives in
+The wallpaper-span and Paper Mode add-ons are fully restorable: their plugin
+patches live in
 [`config/patches/wallpaper-align.span.patch`](config/patches/wallpaper-align.span.patch)
-and the framing config, toggle script, and Style-menu entry are mirrored in
-[`config/omarchy/`](config/omarchy/) — `bash config/restore.sh` (step 7)
+and `config/patches/paper-mode.hostipc.patch`, and the framing config, toggle
+script, and Style-menu entry are mirrored in
+[`config/omarchy/`](config/omarchy/) — `bash config/restore.sh` (steps 7, 7c)
 re-applies all of it on a fresh install or after `omarchy plugin update`
-reverts the patch.
+reverts the patches.
 
 ## Customization of Apps
 

@@ -34,8 +34,9 @@
 | Netspeed | `vm.netspeed` | Live download/upload speed in the bar (`↓ x ↑ y`), fixed-width from `/sys` interface counters so the bar never shifts. Hover → tooltip with interface + both rates, left/middle click → immediate refresh, right-click → toggle upload readout. Auto-placed in the bar's right section on enable; settings `refreshSeconds` (1–5, default 1) and `showUpload`. | [jhonoryza/omarchy-netspeed](https://github.com/jhonoryza/omarchy-netspeed) | `omarchy plugin add https://github.com/jhonoryza/omarchy-netspeed.git --enable --yes` |
 | Wallpaper Align | `wallpaper-align` | Clone of stock `omarchy.background` (which is disabled) plus a bar widget: set image/color per screen or span the whole layout, fill/fit/stretch + edge align. **Patched here** for a `span` mode — see [Wallpaper Align + span mode](#wallpaper-align--span-mode-patched). Auto-placed in the bar's right section on enable. | [Primly/omarchy-wallpaper](https://github.com/Primly/omarchy-wallpaper) | `omarchy plugin add https://github.com/Primly/omarchy-wallpaper --enable --yes` then apply `config/patches/wallpaper-align.span.patch` (done by `config/restore.sh` step 7) |
 | Days | `leonrlr4.days` | Per-day task list overlay: tasks belong to the day they're written, Markdown notes, paste screenshots (via `SUPER + V`), subtasks, and the day's calendar events beside them. Overlay kind, no bar widget; data is local JSON in `~/.local/share/leonrlr4.days/`. | [leonrlr4/days](https://github.com/leonrlr4/days) | `omarchy plugin add https://github.com/leonrlr4/days.git --enable --yes` then `~/.config/omarchy/plugins/leonrlr4.days/scripts/setup` (binds `SUPER + M`; idempotent, `--check` reports missing bits) |
-| Omarchy Google Calendar and Clock | `omarchy-google-calendar-clock` | Bar clock + local-first calendar. Used here **only as the read-only event bridge for Days** (Days calls `scripts/calendar-events <from> <to>`). Runs the [Caldir](https://github.com/t4t5/caldir) runtime over local `.ics` folders; Google sync is optional and is **not** configured on this machine. | [NachoRodriguezM/omarchy-google-calendar-clock](https://github.com/NachoRodriguezM/omarchy-google-calendar-clock) | `omarchy plugin add https://github.com/NachoRodriguezM/omarchy-google-calendar-clock --enable --yes` then `scripts/setup --binaries-only` (installs Caldir without Google OAuth) |
+| Omarchy Google Calendar and Clock | `omarchy-google-calendar-clock` | Bar clock + local-first calendar. Used here **only as the read-only event bridge for Days** (Days calls `scripts/calendar-events <from> <to>`). Runs the [Caldir](https://github.com/t4t5/caldir) runtime over local `.ics` folders; Google sync is optional and is **not** configured on this machine. **Patched here** to add local todo/reminder/note buttons and a quieter month grid — see [Local todo/reminder/note patch](#omarchy-google-calendar-and-clock--local-todoremindernote-patch). | [NachoRodriguezM/omarchy-google-calendar-clock](https://github.com/NachoRodriguezM/omarchy-google-calendar-clock) | `omarchy plugin add https://github.com/NachoRodriguezM/omarchy-google-calendar-clock --enable --yes` then `scripts/setup --binaries-only` (installs Caldir without Google OAuth), then apply `config/patches/omarchy-google-calendar-clock.local-items.patch` (done by `config/restore.sh` step 9) |
 | OmiHaze | `nasrullaameen.omihaze` | Dims inactive windows (macOS HazeOver-style) so the focused window stays visually dominant — auto-follows focus, live intensity slider, presets, scope, per-app exclusions (reads `hyprctl -j clients`; e.g. spares scratchpad if `excludeSpecialWorkspace`). Bar-widget kind. Auto-placed in the bar's **center** section on enable. | [NasrullaAmeen/omihaze](https://github.com/NasrullaAmeen/omihaze) | `omarchy plugin add https://github.com/NasrullaAmeen/omihaze.git --enable --yes` |
+| Paper Mode | `io.github.prathamesh913.paper-mode` | Screen-wide paper/e-ink display modes via Hyprland's native `screen_shader` — grayscale, warm "paper", high-contrast "e-ink", one-click toggle in the bar (left-click toggles, right-click picks a mode). Service + bar-widget kinds. **Patched here** so the bar widget reaches its service over IPC when hosted by a replacement bar — see [Paper Mode (patched for replacement bars)](#paper-mode-patched-for-replacement-bars). | [Prathamesh913/paper-mode](https://github.com/Prathamesh913/paper-mode) | `omarchy plugin add https://github.com/Prathamesh913/paper-mode.git --enable --yes` then apply `config/patches/paper-mode.hostipc.patch` (done by `config/restore.sh` step 7c) |
 
 ## Bar: position and arrangement (this machine)
 
@@ -61,18 +62,20 @@ Left → right order within the bar's three sections:
 
 **right** (in order):
 1. `omarchy.tray`
-2. `wallpaper-align` (Wallpaper Align — image → bar widget)
-3. `vm.netspeed` (Netspeed)
-4. `io.github.grootaiinfinity.hwmon` (Hardware Monitor)
-5. `io.github.cjohnson46.omaglass` (OmaGlass)
-6. `im0001gt.screens` (Screens)
-7. `omarchy.agents`
-8. `omarchy.bluetooth`
-9. `omarchy.network`
-10. `omarchy.audio`
-11. `omarchy.monitor`
-12. `omarchy.power`
-13. `io.github.jondkinney.barscreens` (Bar Screens' own widget — the
+2. `io.github.prathamesh913.paper-mode` (Paper Mode — screen shader toggle;
+   auto-placed here on enable)
+3. `wallpaper-align` (Wallpaper Align — image → bar widget)
+4. `vm.netspeed` (Netspeed)
+5. `io.github.grootaiinfinity.hwmon` (Hardware Monitor)
+6. `io.github.cjohnson46.omaglass` (OmaGlass)
+7. `im0001gt.screens` (Screens)
+8. `omarchy.agents`
+9. `omarchy.bluetooth`
+10. `omarchy.network`
+11. `omarchy.audio`
+12. `omarchy.monitor`
+13. `omarchy.power`
+14. `io.github.jondkinney.barscreens` (Bar Screens' own widget — the
     right-edge peek/toggle)
 
 **Not on the bar** (enabled as service/overlay; no bar slot):
@@ -208,6 +211,57 @@ git -C ~/.config/omarchy/plugins/wallpaper-align diff \
     > ~/Projects/Omarchy-setup-2026/config/patches/wallpaper-align.span.patch
 ```
 
+## Paper Mode (patched for replacement bars)
+
+[Paper Mode](https://github.com/Prathamesh913/paper-mode)
+(`io.github.prathamesh913.paper-mode`) applies screen-wide paper/e-ink display
+modes with Hyprland's native `decoration:screen_shader` — **Grayscale**,
+**Paper** (warm cream tint), **E-Ink** (high-contrast dithered), or **Normal**,
+toggled from a bar widget (left-click toggles the last mode, right-click opens
+a preset menu). Service + bar-widget kinds; `omarchy plugin add
+https://github.com/Prathamesh913/paper-mode.git --enable --yes` auto-places the
+widget in the bar's right section. IPC: `omarchy-shell paper-mode
+{status,toggle,enablePreset,setPreset,disable,togglePreset}`.
+
+**The problem:** the stock widget reads its sibling service directly through the
+injected shell — `bar.shell.serviceFor("io.github.prathamesh913.paper-mode")`.
+Only the first-party omarchy bar mints a service-capable widget shell. Under
+the **Bar Screens** replacement bar the widget gets a *service-less* entry
+facade, so `serviceFor` always returns `null` and the icon sits in a
+"Service unavailable" state — even though the service itself is up (its IPC
+target responds). This box hits any widget that depends on a sibling service
+while hosted by a replacement bar.
+
+**The fix:** `PaperModeWidget.qml` now falls back to the plugin's own IPC when
+the injected service is absent. When a service shell *is* provided (stock bar),
+the original live `serviceFor` path is still used, so upstream behaviour is
+untouched where it worked. In IPC mode the widget drives the exact same
+target/`omarchy-shell` calls (`status`, `toggle`, `disable`, `setPreset`) the
+service exposes, so GUI and CLI state always agree.
+
+Persistent patch: `config/patches/paper-mode.hostipc.patch`
+(it applies to the plugin's git checkout; a `omarchy plugin update` reverts it —
+re-apply with `git -C ~/.config/omarchy/plugins/io.github.prathamesh913.paper-mode
+apply .../paper-mode.hostipc.patch`, done by `config/restore.sh` step 7c).
+
+The stock menu sends `setPreset <key>`, but the plugin's `IpcHandler` only
+exposes `setPreset` as an in-process method — `omarchy-shell paper-mode
+setPreset grayscale` answers **"Function not found"**. So presets were only
+reachable via left-click `toggle` (which flips to `lastPreset`, defaulting to
+eink); the menu's Grayscale/Paper/E-Ink rows did nothing. The patch sends
+`enablePreset <key>` instead, which is the exposed equivalent (`{"enabled":…,
+"preset":…}`), so every preset is selectable from the menu.
+
+Regenerate the patch after editing the plugin:
+
+```bash
+git -C ~/.config/omarchy/plugins/io.github.prathamesh913.paper-mode diff \
+    > ~/Projects/Omarchy-setup-2026/config/patches/paper-mode.hostipc.patch
+```
+
+Verified live: IPC `enablePreset eink` sets `decoration:screen_shader` to the
+plugin's `eink.glsl` and `status` agrees; `disable` clears it back to empty.
+
 ## Days + local calendar (Caldir)
 
 Days shows the day's calendar events above the task list **only** if the
@@ -298,6 +352,44 @@ needed. All-day notes (no time) are skipped.
   edited, so `omarchy update` can't silently undo the sound. Installed by
   `config/restore.sh` **step 8b**.
 
+## Omarchy Google Calendar and Clock — local todo/reminder/note patch
+
+Caldir (and therefore Google Calendar, via this plugin) only knows about
+**events** — no bare todo, standalone reminder, or note object exists in
+either. The stock calendar popup's day toolbar was just a single `+` (add
+event) plus sync icons. Patched `Panel.qml` and added `LocalItems.js` to add
+three more buttons next to it:
+
+- **`E`** — unchanged, opens the existing event form (still goes through
+  Caldir/Google like before).
+- **`T` / `R` / `N`** — Todo / Reminder / Note. Each opens a small inline
+  field (Reminder also gets a `HH:MM` field) under the selected day's events.
+  None of these touch Caldir or get pulled/pushed — they live entirely in
+  their own file, `~/.local/share/omarchy-google-calendar-clock/local-items.json`
+  (JSON array, one entry per item: `type`, `date`, `text`, `time` for
+  reminders, `done` for todos).
+- Shown under the day's Google events in `TODO` / `REMINDERS` / `NOTES`
+  sections, each row with a delete button (todos also get a done-toggle).
+- A reminder rides the **same** desktop-notification pipeline the plugin
+  already uses for timed events (5 minutes before + at the time), reusing the
+  `calendarNotified` de-dupe map so it can't double-fire across a shell
+  restart.
+
+Also restyled the month grid to match: today/selected is a border only (no
+filled background except on hover), and a day's events show as up to three
+small accent dots or a `+N` count badge past that, instead of one dot per
+Google calendar color.
+
+Persistent patch:
+[`config/patches/omarchy-google-calendar-clock.local-items.patch`](../config/patches/omarchy-google-calendar-clock.local-items.patch)
+— re-apply after any `omarchy plugin update` (done by `config/restore.sh`
+**step 9**). Regenerate after editing the plugin further:
+
+```bash
+git -C ~/.config/omarchy/plugins/omarchy-google-calendar-clock diff HEAD~1 HEAD \
+    > ~/Projects/Omarchy-setup-2026/config/patches/omarchy-google-calendar-clock.local-items.patch
+```
+
 ## Files touched
 
 - `~/.config/omarchy/plugins/<id>/` — git checkout of each plugin (this is the
@@ -343,6 +435,11 @@ needed. All-day notes (no time) are skipped.
   `config/restore.sh` **step 8b**; requires `inotifywait` + `pw-play`
 - `~/.config/systemd/user/omarchy-reminder-sound.service` — systemd user
   service running the sound watcher (mirrored in `config/systemd/user/`)
+- `~/.config/omarchy/plugins/io.github.prathamesh913.paper-mode/` — Paper Mode
+  plugin checkout; `PaperModeWidget.qml` **patched** with an IPC fallback for
+  replacement-bar hosts (patch: `config/patches/paper-mode.hostipc.patch`,
+  re-applied by `config/restore.sh` step 7c; a `omarchy plugin update` reverts
+  it)
 
 ## Caveats
 
