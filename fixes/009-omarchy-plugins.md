@@ -38,6 +38,8 @@
 | OmiHaze | `nasrullaameen.omihaze` | Dims inactive windows (macOS HazeOver-style) so the focused window stays visually dominant — auto-follows focus, live intensity slider, presets, scope, per-app exclusions (reads `hyprctl -j clients`; e.g. spares scratchpad if `excludeSpecialWorkspace`). Bar-widget kind. Auto-placed in the bar's **center** section on enable. | [NasrullaAmeen/omihaze](https://github.com/NasrullaAmeen/omihaze) | `omarchy plugin add https://github.com/NasrullaAmeen/omihaze.git --enable --yes` |
 | Paper Mode | `io.github.prathamesh913.paper-mode` | Screen-wide paper/e-ink display modes via Hyprland's native `screen_shader` — grayscale, warm "paper", high-contrast "e-ink", one-click toggle in the bar (left-click toggles, right-click picks a mode). Service + bar-widget kinds. **Patched here** so the bar widget reaches its service over IPC when hosted by a replacement bar — see [Paper Mode (patched for replacement bars)](#paper-mode-patched-for-replacement-bars). | [Prathamesh913/paper-mode](https://github.com/Prathamesh913/paper-mode) | `omarchy plugin add https://github.com/Prathamesh913/paper-mode.git --enable --yes` then apply `config/patches/paper-mode.hostipc.patch` (done by `config/restore.sh` step 7c) |
 
+| OmaSpotify | `io.github.jeremylanger.omaspotify` | Spotify-replacement in Quickshell — full client (search, browse, library, playlists, queue, stats, equalizer, lyrics), local receiver daemon for audio (**Spotify Premium required for playback**; free accounts can still browse/manage their library), about 60 MB RAM instead of ~950 MB. The receiver is a local librespot-based Rust backend (`scripts/setup.sh` builds it if no verified release is available). Service + bar-widget + panel kinds. Under the **Bar Screens** replacement bar its bar widget runs **icon-only** (no track text / in-bar controls — same `serviceFor` limitation as Paper Mode); the full player opens from the icon and is unaffected. Auto-placed in the bar's left section on enable. | [jeremylanger/omaspotify](https://github.com/jeremylanger/omaspotify) | `omarchy plugin add https://github.com/jeremylanger/omaspotify.git --enable --yes` then `scripts/setup.sh` (builds backend via Rust — see the OmaSpotify section) |
+
 ## Bar: position and arrangement (this machine)
 
 Current state of `~/.config/omarchy/shell.json` (top bar, non-transparent,
@@ -50,6 +52,8 @@ Left → right order within the bar's three sections:
 1. `omarchy.menu`
 2. `omarchy.workspaces` — per-monitor workspace groups (eDP-2 → IDs 6–8,
    DP-4 → 0,9, DP-5 → 1–5; eDP-2 group uses `bright_green` colorKey)
+3. `io.github.jeremylanger.omaspotify` — OmaSpotify (icon-only under Bar Screens;
+   click opens the full player)
 
 **center** (the `centerAnchor` drives which widget hugs dead-center):
 1. `omarchy.indicators`
@@ -221,7 +225,8 @@ toggled from a bar widget (left-click toggles the last mode, right-click opens
 a preset menu). Service + bar-widget kinds; `omarchy plugin add
 https://github.com/Prathamesh913/paper-mode.git --enable --yes` auto-places the
 widget in the bar's right section. IPC: `omarchy-shell paper-mode
-{status,toggle,enablePreset,setPreset,disable,togglePreset}`.
+{status,toggle,enablePreset,disable,togglePreset}` (see below for why
+`setPreset` is not part of it).
 
 **The problem:** the stock widget reads its sibling service directly through the
 injected shell — `bar.shell.serviceFor("io.github.prathamesh913.paper-mode")`.
@@ -261,6 +266,81 @@ git -C ~/.config/omarchy/plugins/io.github.prathamesh913.paper-mode diff \
 
 Verified live: IPC `enablePreset eink` sets `decoration:screen_shader` to the
 plugin's `eink.glsl` and `status` agrees; `disable` clears it back to empty.
+
+## OmaSpotify (replacement bar: bar widget is icon-only)
+
+[OmaSpotify](https://github.com/jeremylanger/omaspotify)
+(`io.github.jeremylanger.omaspotify`) is a full Spotify client built in
+Quickshell (Omarchy's own UI toolkit): search, browse, library, playlists,
+queue, stats, equalizer, and lyrics, plus a local receiver that plays audio on
+this computer — about 60 MB of RAM versus ~950 MB for the official client.
+Service + bar-widget + panel kinds; `omarchy plugin add
+https://github.com/jeremylanger/omaspotify.git --enable --yes` auto-places the
+widget in the bar's left section.
+
+**Spotify Premium required.** Local playback is served by librespot, which
+refuses free-tier accounts (`librespot does not support "free" accounts`).
+Browsing, search, and library management work without Premium; only streaming
+audio on this computer needs it. This exits with status 1 and the
+`omaspotify.service` unit goes `start-limit-hit` — see the unit journal to
+confirm.
+
+**How the pieces connect:** the bar widget is a thin status strip that binds
+30+ live properties of the sibling service (`title`, `artist`, `playing`,
+`hasMedia`, `daemon.running`, `accountConnected`, …). It reads the service the
+same way Paper Mode's widget did — `bar.shell.serviceFor(
+"io.github.jeremylanger.omaspotify")` (BarWidget.qml:15) — so under the **Bar
+Screens** replacement bar the injected facade is service-less and `spotify` is
+`null`. The widget then degrades to **icon-only** (`iconOnly` is true when
+`!spotify`): no track title/artist, no in-bar controls.
+
+**Why no patch here:** unlike Paper Mode (a single shader method), this service
+exposes ~100 IPC procedures and the widget live-binds dozens of properties; a
+`config/patches`-style IPC fallback would be a large, lossy rewrite. Left-click
+on the icon summons the **full player** panel, which is served by the shell
+itself (not the bar facade), so the complete client works normally. The only
+loss is the compact track text in the bar.
+
+**First-time setup** (from the plugin's own README):
+1. Click the Spotify icon in the bar → **Set up and continue** (or **Continue
+   with Spotify** if playback is already installed).
+2. Sign in on Spotify's own page in the browser and approve access.
+3. Complete the separate playback authorization so audio plays on this computer;
+   if prompted choose **Finish playback setup**.
+
+**Playback backend** (local audio receiver — the separate step that actually
+streams): the plugin tries a verified release download first; if provenance
+cannot be verified, it falls back to a local Rust build. On this machine the
+verified release was unavailable, so the build was done with a user-local
+rustup install (`curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path
+--profile minimal` — no sudo needed, installs to `~/.cargo` + `~/.rustup`).
+`~/.cargo/bin/cargo` was then added to PATH so `scripts/setup.sh` can find it.
+The first build takes ~1 minute; the resulting binary is at
+`~/.local/lib/omaspotify/omaspotify-backend` with its unit
+(`omaspotify.service`, static, started on demand — never enabled at login).
+
+Optional (only if you want it): replace Omarchy's stock `SUPER + SHIFT + M ·
+Music` binding by adding to `~/.config/hypr/bindings.lua`:
+
+```lua
+  hl.unbind("SUPER + SHIFT + M") -- previously: Music
+  o.bind("SUPER + SHIFT + M", "OmaSpotify",
+    "omarchy shell -q io.github.jeremylanger.omaspotify.player togglePlayer")
+```
+
+then `hyprctl reload` and check `hyprctl configerrors`. In the player's
+Settings you can then pick whether that shortcut opens Omarchy's Music app, the
+full player, or the mini-player; `omarchy shell -q
+io.github.jeremylanger.omaspotify.player {volumeUp,volumeDown}` raises/lowers
+Spotify's own volume 5% per call.
+
+Verified live: plugin loads with zero QML errors; service IPC target
+`io.github.jeremylanger.omaspotify.player` is up; the playback backend built
+and its unit installed, and the Connect-device credentials were stored
+(`~/.local/state/omaspotify/{oauth,zeroconf}/credentials.json`). The backend
+authenticated to Spotify's AP for a logged-in account — then stopped for
+"free" accounts (the Premium gate above), so playback is not tested end-to-end
+on this machine.
 
 ## Days + local calendar (Caldir)
 
@@ -440,6 +520,23 @@ git -C ~/.config/omarchy/plugins/omarchy-google-calendar-clock diff HEAD~1 HEAD 
   replacement-bar hosts (patch: `config/patches/paper-mode.hostipc.patch`,
   re-applied by `config/restore.sh` step 7c; a `omarchy plugin update` reverts
   it)
+- `~/.config/omarchy/plugins/io.github.jeremylanger.omaspotify/` — OmaSpotify
+  plugin checkout (full Spotify client); no patches — its bar widget is
+  icon-only under Bar Screens, which is an upstream limitation, not something
+  patched here. Its bar entry lives in `~/.config/omarchy/shell.json` (left
+  section)
+- `~/.local/lib/omaspotify/` — built `omaspotify-backend` + its source/hash
+  provenance files (built locally — see the OmaSpotify section; no verified
+  release was available on this machine)
+- `~/.config/systemd/user/omaspotify.service` — static, on-demand playback
+  backend unit (never enabled; rendered from the plugin's `systemd/` template)
+- `~/.config/omaspotify/playback.conf` — playback config (device name,
+  `backend = "pulseaudio"`, bitrate 320)
+- `~/.local/state/omaspotify/` — account + playback sessions:
+  `session.json`, `{oauth,zeroconf}/credentials.json` (playback Connect creds),
+  plus `library.json`/`plays.json`/`queries.json` caches
+- `~/.rustup/` + `~/.cargo/` — user-local Rust toolchain (no sudo) used to
+  build the backend; rust-toolchain pin lives in the plugin checkout
 
 ## Caveats
 

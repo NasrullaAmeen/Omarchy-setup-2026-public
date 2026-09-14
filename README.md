@@ -27,7 +27,10 @@ Installed third-party plugins (from the
 - Omarchy Google Calendar and Clock (local calendar via Caldir; bridge for Days)
 - OmiHaze (dims inactive windows)
 - Paper Mode (paper/e-ink screen shaders from the bar; patched so its widget
-  reaches its service over IPC under the Bar Screens replacement bar)
+   reaches its service over IPC under the Bar Screens replacement bar)
+- OmaSpotify (full Spotify client in Quickshell; under Bar Screens its bar
+   widget is an icon that opens the full player; local playback needs a
+   Spotify Premium account)
 
 Details, install commands, and management — including **auto-reminders for
 timed calendar notes** (a note with a time triggers an Omarchy reminder at its
