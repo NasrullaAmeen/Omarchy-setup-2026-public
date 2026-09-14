@@ -286,6 +286,17 @@ needed. All-day notes (no time) are skipped.
   subfolder, since `PathChanged=` does **not** support globs) and enables
   both units. If you later add a new calendar folder, re-run restore.sh (or
   add one `PathChanged=` line) to watch it.
+- **Sound on fire:** a timed-note reminder that fires plays the freedesktop
+  `complete` chime. Instead of patching the first-party `omarchy-reminder`,
+  `~/.local/bin/omarchy-reminder-sound` (a systemd user service) watches
+  `${XDG_RUNTIME_DIR}/omarchy-reminders/` for a `.message` file being deleted
+  — that deletion *is* the reminder firing — so **every** reminder makes the
+  sound, stock `omarchy reminder` and calendar auto-reminders alike. One chime
+  per 2 s (bursts from `omarchy-reminder clear` can't stack). Overrides:
+  `OMARCHY_REMINDER_SOUND`, `OMARCHY_REMINDER_PLAYER` (default `pw-play`),
+  `OMARCHY_REMINDER_GAP_S`, `OMARCHY_REMINDER_DIR`. No first-party binary is
+  edited, so `omarchy update` can't silently undo the sound. Installed by
+  `config/restore.sh` **step 8b**.
 
 ## Files touched
 
@@ -327,6 +338,11 @@ needed. All-day notes (no time) are skipped.
   `config/systemd/user/`)
 - `~/.local/state/omarchy-calendar-remind/` — per-UID fingerprint markers
   (dedupe) plus the `flock` lock
+- `~/.local/bin/omarchy-reminder-sound` — chime when any reminder fires
+  (mirrored in `config/omarchy/omarchy-reminder-sound`) — installed by
+  `config/restore.sh` **step 8b**; requires `inotifywait` + `pw-play`
+- `~/.config/systemd/user/omarchy-reminder-sound.service` — systemd user
+  service running the sound watcher (mirrored in `config/systemd/user/`)
 
 ## Caveats
 
