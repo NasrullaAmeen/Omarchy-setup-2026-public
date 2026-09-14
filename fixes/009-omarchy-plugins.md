@@ -26,6 +26,10 @@
 
 | Plugins | ID | Purpose | Source | Install |
 | ------ | --- | ------- | ------ | ------- |
+| Keystroke | `evindor.keystroke` | Raycast-style command palette that **replaces the Omarchy menu** (`omarchy.clonedFrom: "omarchy.menu"`): type or speak apps, any Omarchy menu command, hotkeys, math, conversions, emoji, clipboard history, files, Codex hand-off; local smart-match embedding model. `Super+Space`, every `omarchy-menu` binding, `omarchy menu …` and the menu pickers all route to it. Menu + bar-widget kinds; its bar button replaces the stock menu button (first on the left). Disabling/removing (`omarchy plugin disable/remove evindor.keystroke`) restores the stock menu. | [evindor/keystroke](https://github.com/evindor/keystroke) | `omarchy plugin add https://github.com/evindor/keystroke.git --enable --yes` |
+
+| Plugins | ID | Purpose | Source | Install |
+| ------ | --- | ------- | ------ | ------- |
 | Screens | `im0001gt.screens` | Monitor layout — drag-to-arrange, scale, HDR/VRR, saved profiles. Takes over `~/.config/hypr/monitors.lua` on first run (see [fix 001](001-multi-monitor-screens-plugin.md)). | [IM0001GT/omarchy-screens](https://github.com/IM0001GT/omarchy-screens) | `omarchy plugin add https://github.com/IM0001GT/omarchy-screens --enable --yes` |
 | oShelf | `io.github.i12bp8.oshelf` | A temporary desktop-edge "shelf" — park files, images, links, and text, then pick them up in another app/window. Service kind, no bar widget. | [i12bp8/oShelf](https://github.com/i12bp8/oShelf) | `omarchy plugin add https://github.com/i12bp8/oShelf.git --enable --yes` |
 | Bar Screens | `io.github.jondkinney.barscreens` | Clone of the stock bar with per-monitor show/hide toggles — runs Omarchy's own bar untouched and parks it off-screen on unticked monitors, so updates can't break it and the stock bar's fixes keep arriving. Replaces the bar when enabled (set in Settings › Bar). | [jondkinney/omarchy-barscreens](https://github.com/jondkinney/omarchy-barscreens) | `omarchy plugin add https://github.com/jondkinney/omarchy-barscreens.git --enable --yes` |
@@ -49,7 +53,8 @@ Current state of `~/.config/omarchy/shell.json` (top bar, non-transparent,
 Left → right order within the bar's three sections:
 
 **left** (in order):
-1. `omarchy.menu`
+1. `evindor.keystroke` — Keystroke command palette (took the stock
+   `omarchy.menu`'s place: it routes every `omarchy.menu` / menu-bar call)
 2. `omarchy.workspaces` — per-monitor workspace groups (eDP-2 → IDs 6–8,
    DP-4 → 0,9, DP-5 → 1–5; eDP-2 group uses `bright_green` colorKey)
 3. `io.github.jeremylanger.omaspotify` — OmaSpotify (icon-only under Bar Screens;
@@ -342,6 +347,36 @@ authenticated to Spotify's AP for a logged-in account — then stopped for
 "free" accounts (the Premium gate above), so playback is not tested end-to-end
 on this machine.
 
+## Keystroke (replaces the Omarchy menu)
+
+[Keystroke](https://github.com/evindor/keystroke) (`evindor.keystroke`) is a
+Raycast-style command palette that **replaces the Omarchy menu**. It is one
+native `menu`-kind plugin (QML + JS) running in the existing `omarchy-shell`
+process, themed by the active Omarchy theme, with a small local embedding
+model for "Smart Match" fuzzy understanding.
+
+**How it replaces the menu:** the manifest declares
+`omarchy: { clonedFrom: "omarchy.menu" }`, so Omarchy's plugin registry routes
+every `omarchy.menu` call to the enabled replacement — `Super+Space`, all
+`omarchy-menu` bindings, `omarchy menu summon <route>`, pickers
+(`omarchy-menu-select` / `omarchy-menu-input`), and the menu button in the bar —
+and restores the stock menu when the plugin is disabled or removed. Its bar
+button sits where the stock menu button was (first, left section).
+
+**What it can do** (pulled from its own README): fuzzy app + command search,
+the entire Omarchy menu as rows, every Omarchy hotkey (run or learn the keys),
+math, unit/conversion, colors, emoji, clipboard history, files under `~`
+(fuzzy‑abbreviate path fragments), and hand-offs to Claude/Codex/browser with
+your prompt in the composer — typed or spoken. Voice dictation and the Codex
+integration need their per-feature setup; community **extensions** live in
+`extensions/` and are all **off until enabled** (an off extension is never
+even compiled). State (frecency, preferences) is stored as hashed ids only in
+`~/.local/state/keystroke/usage.json`.
+
+Verified live: plugin enabled with zero QML errors; the stock `omarchy.menu`
+button is replaced in the bar (left section, index 0); `Super+Space` (any
+route that invokes `omarchy.menu`) now opens the Keystroke palette.
+
 ## Days + local calendar (Caldir)
 
 Days shows the day's calendar events above the task list **only** if the
@@ -537,6 +572,9 @@ git -C ~/.config/omarchy/plugins/omarchy-google-calendar-clock diff HEAD~1 HEAD 
   plus `library.json`/`plays.json`/`queries.json` caches
 - `~/.rustup/` + `~/.cargo/` — user-local Rust toolchain (no sudo) used to
   build the backend; rust-toolchain pin lives in the plugin checkout
+- `~/.local/state/keystroke/` — Keystroke state: `usage.json` (frecency /
+  preferences, hashed ids only, never query text); extensions are off until
+  enabled in Settings → Extensions
 
 ## Caveats
 

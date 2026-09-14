@@ -28,6 +28,8 @@ Installed third-party plugins (from the
 - OmiHaze (dims inactive windows)
 - Paper Mode (paper/e-ink screen shaders from the bar; patched so its widget
    reaches its service over IPC under the Bar Screens replacement bar)
+- Keystroke (Raycast-style command palette; it replaces the Omarchy menu —
+  `Super+Space` now opens it)
 - OmaSpotify (full Spotify client in Quickshell; under Bar Screens its bar
    widget is an icon that opens the full player; local playback needs a
    Spotify Premium account)
