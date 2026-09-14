@@ -37,6 +37,8 @@ Installed third-party plugins (from the
 - YouTube Float (browse YouTube Watch Later/subscriptions/search from a
   picker and play in a floating pinned mpv window; `Super+Alt+Y` and overlay
   keys)
+- FossFetch (one-click package search + install across Pacman, AUR and
+  Flathub from the bar; natural-language category browsing)
 - OmaSpotify (full Spotify client in Quickshell; under Bar Screens its bar
    widget is an icon that opens the full player; local playback needs a
    Spotify Premium account)

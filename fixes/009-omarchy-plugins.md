@@ -30,6 +30,7 @@
 | Onote | `io.github.lolu13.onote` | Sticky notes as ordinary tiled Hyprland windows, drawn by `omarchy-shell` itself (no browser engine/separate app): SQLite store owned by a small local Rust helper (`~/.local/bin/onote-helper`, built from source), notes tile/float/resize like normal windows, closing puts a note in the stack (nothing deleted), tabs, pinned notes, full-text search, optional one-way Markdown mirror (Obsidian). Service + overlay + bar-widget kinds; bar button in the right section. Adds five `Super` bindings (see the Onote section) via `~/.config/hypr/onote.lua` + one `dofile` in `bindings.lua`. | [lolu13/onote](https://github.com/lolu13/onote) | `omarchy plugin add https://github.com/lolu13/onote.git --enable --yes` then `cargo build --release --manifest-path helper/Cargo.toml` and `python3 scripts/install.py` (needs a Rust toolchain; see the Onote section) |
 | Mouseless | `wkuehler.mouseless` | Keyboard-driven pointer (warpd-style): press a modifier, the screen fills with a lettered hint grid, type three letters to warp the pointer and click; supports right/middle/double click, move-only, and scroll mode. Overlay kind (no bar widget — summoned by a keybind). Added `SUPER+ALT+M` binding (SUPER+M is taken by Days). | [wkuehler/mouseless](https://github.com/wkuehler/mouseless) | `omarchy plugin add https://github.com/wkuehler/mouseless.git --enable --yes` then add the trigger binding (see the Mouseless section) |
 | YouTube Float | `io.github.jcputney.media-float-youtube` | Pick up where you left off on YouTube: Watch Later, history, subscriptions, playlists, channels, and search — then play the result in a small **floating, pinned mpv window** that follows you across workspaces. Overlay kind (no bar widget); `youtube-float` CLI + a launcher entry ("YouTube Float"); optional cookies via `youtube-float auth` for subscriptions/history (search works signed out). Requires mpv + yt-dlp (already present). Added four `SUPER+ALT` bindings (see the YouTube Float section); floats/window rules in `~/.config/hypr/media-float.lua`. | [jcputney/omarchy-media-float-youtube](https://github.com/jcputney/omarchy-media-float-youtube) | `omarchy plugin add https://github.com/jcputney/omarchy-media-float-youtube.git --enable --yes` then `<plugin-dir>/setup` and `omarchy restart shell` |
+| FossFetch | `davedes.fossfetch` | Package search + one-click install across three ecosystems in one bar panel: **Pacman** (`pacman -Ss`), **AUR** (RPC search), and **Flatpak** (Flathub AppStream catalog) — all live, no stale curated lists. Natural-language category browsing ("video editing", "browser", "chat") by matching AppStream categories. Bar-widget kind; auto-placed in the right section. Configurable panel width and search debounce (see its settings in the bar widget settings). | [Davedes83/fossfetch](https://github.com/Davedes83/fossfetch) | `omarchy plugin add https://github.com/Davedes83/fossfetch.git --enable --yes` |
 
 | Plugins | ID | Purpose | Source | Install |
 | ------ | --- | ------- | ------ | ------- |
@@ -74,16 +75,17 @@ Left → right order within the bar's three sections:
 
 **right** (in order):
 1. `omarchy.tray`
-2. `io.github.lolu13.onote` (Onote — sticky notes; middle-click = new note,
+2. `davedes.fossfetch` (FossFetch — package search; auto-placed here on enable)
+3. `io.github.lolu13.onote` (Onote — sticky notes; middle-click = new note,
    right-click = stack all)
-3. `io.github.prathamesh913.paper-mode` (Paper Mode — screen shader toggle;
+4. `io.github.prathamesh913.paper-mode` (Paper Mode — screen shader toggle;
    auto-placed here on enable)
-4. `wallpaper-align` (Wallpaper Align — image → bar widget)
-5. `vm.netspeed` (Netspeed)
-6. `io.github.grootaiinfinity.hwmon` (Hardware Monitor)
-7. `io.github.cjohnson46.omaglass` (OmaGlass)
-8. `im0001gt.screens` (Screens)
-9. `omarchy.agents`
+5. `wallpaper-align` (Wallpaper Align — image → bar widget)
+6. `vm.netspeed` (Netspeed)
+7. `io.github.grootaiinfinity.hwmon` (Hardware Monitor)
+8. `io.github.cjohnson46.omaglass` (OmaGlass)
+9. `im0001gt.screens` (Screens)
+10. `omarchy.agents`
 9. `omarchy.bluetooth`
 10. `omarchy.network`
 11. `omarchy.audio`
@@ -720,6 +722,8 @@ git -C ~/.config/omarchy/plugins/omarchy-google-calendar-clock diff HEAD~1 HEAD 
   — "YouTube Float" launcher entry
 - `~/.cache/youtube-float/` — cookies and watch-history cache (created by
   `youtube-float auth`/usage)
+- `~/.config/omarchy/plugins/davedes.fossfetch/` — FossFetch plugin checkout
+  (bar-widget-only; no patches, no external setup, no extra files)
 
 ## Caveats
 
