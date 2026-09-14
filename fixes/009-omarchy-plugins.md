@@ -27,6 +27,7 @@
 | Plugins | ID | Purpose | Source | Install |
 | ------ | --- | ------- | ------ | ------- |
 | Keystroke | `evindor.keystroke` | Raycast-style command palette that **replaces the Omarchy menu** (`omarchy.clonedFrom: "omarchy.menu"`): type or speak apps, any Omarchy menu command, hotkeys, math, conversions, emoji, clipboard history, files, Codex hand-off; local smart-match embedding model. `Super+Space`, every `omarchy-menu` binding, `omarchy menu …` and the menu pickers all route to it. Menu + bar-widget kinds; its bar button replaces the stock menu button (first on the left). Disabling/removing (`omarchy plugin disable/remove evindor.keystroke`) restores the stock menu. | [evindor/keystroke](https://github.com/evindor/keystroke) | `omarchy plugin add https://github.com/evindor/keystroke.git --enable --yes` |
+| Onote | `io.github.lolu13.onote` | Sticky notes as ordinary tiled Hyprland windows, drawn by `omarchy-shell` itself (no browser engine/separate app): SQLite store owned by a small local Rust helper (`~/.local/bin/onote-helper`, built from source), notes tile/float/resize like normal windows, closing puts a note in the stack (nothing deleted), tabs, pinned notes, full-text search, optional one-way Markdown mirror (Obsidian). Service + overlay + bar-widget kinds; bar button in the right section. Adds five `Super` bindings (see the Onote section) via `~/.config/hypr/onote.lua` + one `dofile` in `bindings.lua`. | [lolu13/onote](https://github.com/lolu13/onote) | `omarchy plugin add https://github.com/lolu13/onote.git --enable --yes` then `cargo build --release --manifest-path helper/Cargo.toml` and `python3 scripts/install.py` (needs a Rust toolchain; see the Onote section) |
 
 | Plugins | ID | Purpose | Source | Install |
 | ------ | --- | ------- | ------ | ------- |
@@ -71,14 +72,16 @@ Left → right order within the bar's three sections:
 
 **right** (in order):
 1. `omarchy.tray`
-2. `io.github.prathamesh913.paper-mode` (Paper Mode — screen shader toggle;
+2. `io.github.lolu13.onote` (Onote — sticky notes; middle-click = new note,
+   right-click = stack all)
+3. `io.github.prathamesh913.paper-mode` (Paper Mode — screen shader toggle;
    auto-placed here on enable)
-3. `wallpaper-align` (Wallpaper Align — image → bar widget)
-4. `vm.netspeed` (Netspeed)
-5. `io.github.grootaiinfinity.hwmon` (Hardware Monitor)
-6. `io.github.cjohnson46.omaglass` (OmaGlass)
-7. `im0001gt.screens` (Screens)
-8. `omarchy.agents`
+4. `wallpaper-align` (Wallpaper Align — image → bar widget)
+5. `vm.netspeed` (Netspeed)
+6. `io.github.grootaiinfinity.hwmon` (Hardware Monitor)
+7. `io.github.cjohnson46.omaglass` (OmaGlass)
+8. `im0001gt.screens` (Screens)
+9. `omarchy.agents`
 9. `omarchy.bluetooth`
 10. `omarchy.network`
 11. `omarchy.audio`
@@ -377,6 +380,52 @@ Verified live: plugin enabled with zero QML errors; the stock `omarchy.menu`
 button is replaced in the bar (left section, index 0); `Super+Space` (any
 route that invokes `omarchy.menu`) now opens the Keystroke palette.
 
+## Onote (sticky notes as Hyprland windows)
+
+[Onote](https://github.com/lolu13/onote) (`io.github.lolu13.onote`, formerly the
+Omarchy edition of DeskNotes): sticky notes that are **ordinary Hyprland
+windows** — they tile, float, move and resize like any other window — but are
+drawn by `omarchy-shell` itself (no browser engine, no app process). A small
+Rust helper (`onote-helper`) owns the SQLite store and is the only extra
+process. Service + overlay + bar-widget kinds; the bar button sits in the
+right section (left-click notes & stack, middle-click new note, right-click
+stack all).
+
+**Setup on this machine** (the helper is built from source, nothing is
+downloaded):
+
+```bash
+cd ~/.config/omarchy/plugins/io.github.lolu13.onote
+cargo build --release --manifest-path helper/Cargo.toml   # ~24 s
+python3 scripts/install.py
+```
+
+`scripts/install.py` checks `Super+N` / `Super+Alt+N` / `Super+Alt+H` are free
+(they were — only `Super+M` is taken by Days), writes
+`~/.config/hypr/onote.lua`, adds one `dofile` line at the end of
+`~/.config/hypr/bindings.lua`, copies the built helper to
+`~/.local/bin/onote-helper`, installs a `.desktop` launcher + icon, and
+restarts the shell. `hyprctl configerrors` is clean after install. (Rust was
+already present from the OmaSpotify backend build.)
+
+**Bindings added** (all in `onote.lua`, verified conflict-free):
+
+| Keys | Action |
+| --- | --- |
+| `Super+N` | Notes & Stack — full-text search, restore, confirmed delete |
+| `Super+Alt+N` | New note |
+| `Super+Alt+V` | New note from clipboard text |
+| `Super+Alt+H` | Stack all open notes |
+| `Super+Alt+P` | Pin a note on every workspace |
+
+Also one window rule: notes match `class = ^org.quickshell$` + the
+` — Onote [dn:…]` title suffix and get `tile = true` (never match the class
+alone — other shell windows share it).
+
+Verified live: helper built and running (child of the shell); bar widget on the
+bar's right section; `hyprctl configerrors` clean; install backups in
+`~/.local/state/onote/install-backups/`.
+
 ## Days + local calendar (Caldir)
 
 Days shows the day's calendar events above the task list **only** if the
@@ -575,6 +624,19 @@ git -C ~/.config/omarchy/plugins/omarchy-google-calendar-clock diff HEAD~1 HEAD 
 - `~/.local/state/keystroke/` — Keystroke state: `usage.json` (frecency /
   preferences, hashed ids only, never query text); extensions are off until
   enabled in Settings → Extensions
+- `~/.local/bin/onote-helper` — Onote's Rust helper (built from
+  `~/.config/omarchy/plugins/io.github.lolu13.onote/helper/` via `cargo build
+  --release`; must stay here because `omarchy plugin update` replaces the
+  plugin directory)
+- `~/.config/hypr/onote.lua` — Onote window rule + five bindings, sourced via
+  one `dofile(...)` line at the end of `~/.config/hypr/bindings.lua`
+  (validated by `hyprctl configerrors` on install; backups in
+  `~/.local/state/onote/install-backups/`)
+- `~/.local/share/applications/onote.desktop` + icon under
+  `~/.local/share/icons/hicolor/128x128/apps/` — launcher entry installed by
+  `scripts/install.py`
+- `~/.local/share/com.desknotes.omarchy/desknotes.db` — notes SQLite store
+  (owned by `onote-helper`; shared with earlier DeskNotes installs if any)
 
 ## Caveats
 

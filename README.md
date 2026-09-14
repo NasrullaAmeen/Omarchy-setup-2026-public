@@ -30,6 +30,8 @@ Installed third-party plugins (from the
    reaches its service over IPC under the Bar Screens replacement bar)
 - Keystroke (Raycast-style command palette; it replaces the Omarchy menu —
   `Super+Space` now opens it)
+- Onote (sticky notes as ordinary tiled Hyprland windows; `Super+N` for
+  notes & stack, `Super+Alt+N` new note, `Super+Alt+H` stack all)
 - OmaSpotify (full Spotify client in Quickshell; under Bar Screens its bar
    widget is an icon that opens the full player; local playback needs a
    Spotify Premium account)
