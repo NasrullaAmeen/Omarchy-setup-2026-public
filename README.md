@@ -83,6 +83,7 @@ reverts the patches.
 | 2026-09-02 | Replace Plymouth boot splash and SDDM login logo | [007-plymouth-sddm-branding.md](fixes/007-plymouth-sddm-branding.md)             |
 | 2026-09-14 | Re-applied all fixes on a fresh install, with `config/` backups | [008-reapply-after-reinstall.md](fixes/008-reapply-after-reinstall.md) |
 | 2026-09-14 | Omarchy plugins from the official marketplace | [009-omarchy-plugins.md](fixes/009-omarchy-plugins.md)                    |
+| 2026-09-14 | Hyprland crash — `SUPER+T` on a pinned floating overlay | [010-hyprland-dwindle-crash.md](fixes/010-hyprland-dwindle-crash.md)      |
 
 ## Public mirror
 
