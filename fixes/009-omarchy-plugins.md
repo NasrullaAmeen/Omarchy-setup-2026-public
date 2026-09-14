@@ -31,6 +31,7 @@
 | Mouseless | `wkuehler.mouseless` | Keyboard-driven pointer (warpd-style): press a modifier, the screen fills with a lettered hint grid, type three letters to warp the pointer and click; supports right/middle/double click, move-only, and scroll mode. Overlay kind (no bar widget — summoned by a keybind). Added `SUPER+ALT+M` binding (SUPER+M is taken by Days). | [wkuehler/mouseless](https://github.com/wkuehler/mouseless) | `omarchy plugin add https://github.com/wkuehler/mouseless.git --enable --yes` then add the trigger binding (see the Mouseless section) |
 | YouTube Float | `io.github.jcputney.media-float-youtube` | Pick up where you left off on YouTube: Watch Later, history, subscriptions, playlists, channels, and search — then play the result in a small **floating, pinned mpv window** that follows you across workspaces. Overlay kind (no bar widget); `youtube-float` CLI + a launcher entry ("YouTube Float"); optional cookies via `youtube-float auth` for subscriptions/history (search works signed out). Requires mpv + yt-dlp (already present). Added four `SUPER+ALT` bindings (see the YouTube Float section); floats/window rules in `~/.config/hypr/media-float.lua`. | [jcputney/omarchy-media-float-youtube](https://github.com/jcputney/omarchy-media-float-youtube) | `omarchy plugin add https://github.com/jcputney/omarchy-media-float-youtube.git --enable --yes` then `<plugin-dir>/setup` and `omarchy restart shell` |
 | FossFetch | `davedes.fossfetch` | Package search + one-click install across three ecosystems in one bar panel: **Pacman** (`pacman -Ss`), **AUR** (RPC search), and **Flatpak** (Flathub AppStream catalog) — all live, no stale curated lists. Natural-language category browsing ("video editing", "browser", "chat") by matching AppStream categories. Bar-widget kind; auto-placed in the right section. Configurable panel width and search debounce (see its settings in the bar widget settings). | [Davedes83/fossfetch](https://github.com/Davedes83/fossfetch) | `omarchy plugin add https://github.com/Davedes83/fossfetch.git --enable --yes` |
+| Hyprpin | `io.github.jondkinney.hyprpin` | Compositor-level picture-in-picture: keep chosen windows visible across workspaces by pinning them to a corner pop-out, a tiled edge, a dedicated display, or the scratchpad. Service + bar-widget kinds; bar icon in the right section with on/off switch (right-click toggles without opening). Stock `SUPER+O`/`SUPER+T` fall through unchanged while Hyprpin is off; optional `SUPER+P` and `SUPER+ALT+S` overrides available (see the Hyprpin section). | [jondkinney/hyprpin](https://github.com/jondkinney/hyprpin) | `omarchy plugin add https://github.com/jondkinney/hyprpin.git --enable --yes` |
 
 | Plugins | ID | Purpose | Source | Install |
 | ------ | --- | ------- | ------ | ------- |
@@ -75,17 +76,19 @@ Left → right order within the bar's three sections:
 
 **right** (in order):
 1. `omarchy.tray`
-2. `davedes.fossfetch` (FossFetch — package search; auto-placed here on enable)
-3. `io.github.lolu13.onote` (Onote — sticky notes; middle-click = new note,
+2. `io.github.jondkinney.hyprpin` (Hyprpin — compositor-level PIP; on/off via
+   bar icon, right-click toggles without opening)
+3. `davedes.fossfetch` (FossFetch — package search; auto-placed here on enable)
+4. `io.github.lolu13.onote` (Onote — sticky notes; middle-click = new note,
    right-click = stack all)
-4. `io.github.prathamesh913.paper-mode` (Paper Mode — screen shader toggle;
+5. `io.github.prathamesh913.paper-mode` (Paper Mode — screen shader toggle;
    auto-placed here on enable)
-5. `wallpaper-align` (Wallpaper Align — image → bar widget)
-6. `vm.netspeed` (Netspeed)
-7. `io.github.grootaiinfinity.hwmon` (Hardware Monitor)
-8. `io.github.cjohnson46.omaglass` (OmaGlass)
-9. `im0001gt.screens` (Screens)
-10. `omarchy.agents`
+6. `wallpaper-align` (Wallpaper Align — image → bar widget)
+7. `vm.netspeed` (Netspeed)
+8. `io.github.grootaiinfinity.hwmon` (Hardware Monitor)
+9. `io.github.cjohnson46.omaglass` (OmaGlass)
+10. `im0001gt.screens` (Screens)
+11. `omarchy.agents`
 9. `omarchy.bluetooth`
 10. `omarchy.network`
 11. `omarchy.audio`
@@ -495,6 +498,42 @@ Verified live: picker registered, `youtube-float` on PATH, launcher entry
 present, window rule loaded via `hyprland.lua`, `hyprctl reload` +
 `configerrors` clean, shell restarted with zero QML errors.
 
+## Hyprpin (compositor-level picture-in-picture)
+
+[Hyprpin](https://github.com/jondkinney/hyprpin) (`io.github.jondkinney.hyprpin`)
+keeps chosen windows visible when you switch away from their workspace: the
+compositor moves them onto a **corner pop-out**, a **tiled edge**, a
+**dedicated display**, or the **scratchpad** — compositor-level
+picture-in-picture for video calls, a side monitor, or anything else you want
+always on top without it getting lost. Service + bar-widget kinds.
+
+**Bar icon:** click opens the window picker (choose a display and placement);
+right-click toggles the on/off switch without opening the panel. While off,
+every pop-out returns to its original workspace, position, size, and tiled or
+floating state — rules are kept, and on resumes them. The icon dims while off.
+
+**Stock `SUPER+O`/`SUPER+T`:** these are stock Omarchy bindings (centered pop
+and tile toggle). Hyprpin intercepts them only while active; when off they fall
+through unchanged. No extra bindings are needed for basic use.
+
+**Optional bindings** (from the plugin's README; add to
+`~/.config/hypr/local.lua` or `bindings.lua` if you want them):
+
+```lua
+hl.unbind("SUPER + P")
+o.bind("SUPER + P", "Cycle Hyprpin placement / pseudo window", function()
+  omarchy-shell("hyprpin", "cyclePlacement", {})
+end)
+
+hl.unbind("SUPER + ALT + S")
+o.bind("SUPER + ALT + S", "Move window to scratchpad", function()
+  omarchy-shell("hyprpin", "moveToScratchpad", {})
+end)
+```
+
+Verified live: bar icon in the right section (index 2 after tray); service
+loaded with zero QML errors; stock `SUPER+O`/`SUPER+T` unaffected.
+
 ## Days + local calendar (Caldir)
 
 Days shows the day's calendar events above the task list **only** if the
@@ -724,6 +763,9 @@ git -C ~/.config/omarchy/plugins/omarchy-google-calendar-clock diff HEAD~1 HEAD 
   `youtube-float auth`/usage)
 - `~/.config/omarchy/plugins/davedes.fossfetch/` — FossFetch plugin checkout
   (bar-widget-only; no patches, no external setup, no extra files)
+- `~/.config/omarchy/plugins/io.github.jondkinney.hyprpin/` — Hyprpin plugin
+  checkout (service + bar-widget; no patches, no external setup; rules are
+  created dynamically by the service via `hyprctl` when you pin a window)
 
 ## Caveats
 

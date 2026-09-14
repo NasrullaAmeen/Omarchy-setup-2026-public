@@ -39,6 +39,8 @@ Installed third-party plugins (from the
   keys)
 - FossFetch (one-click package search + install across Pacman, AUR and
   Flathub from the bar; natural-language category browsing)
+- Hyprpin (compositor-level picture-in-picture — pin windows across
+  workspaces to a corner, edge, display, or scratchpad)
 - OmaSpotify (full Spotify client in Quickshell; under Bar Screens its bar
    widget is an icon that opens the full player; local playback needs a
    Spotify Premium account)
